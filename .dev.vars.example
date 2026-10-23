@@ -1,0 +1,18 @@
+# Copy to .dev.vars for `npm run dev`. Never commit .dev.vars.
+# In production these are Worker secrets: npx wrangler secret put <NAME>
+
+# One key per app that reports in. Each app sends its own as a Bearer token.
+INGEST_KEY_MAA=
+INGEST_KEY_APEX=
+INGEST_KEY_DOCWORKER=
+
+# Slack incoming webhook for the alerts channel.
+SLACK_WEBHOOK_URL=
+
+# Fine-grained GitHub token, read-only access to repo contents and pull requests.
+GITHUB_TOKEN=
+
+# Cloudflare Access (protects the dashboard).
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=
+OWNER_EMAIL=
