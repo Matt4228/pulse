@@ -1,5 +1,6 @@
 import type { Env } from "./env";
 import { handleIngest } from "./ingest";
+import { healthStatus, tick } from "./scheduler";
 
 function json(body: unknown, status = 200): Response {
   return Response.json(body, { status });
@@ -10,7 +11,8 @@ export default {
     const { pathname } = new URL(req.url);
 
     if (pathname === "/health") {
-      return json({ status: "ok" });
+      const { healthy, lastTick } = await healthStatus(env, Date.now());
+      return json({ status: healthy ? "ok" : "stale", lastTick }, healthy ? 200 : 503);
     }
 
     if (pathname.startsWith("/ingest/")) {
@@ -20,6 +22,10 @@ export default {
     return json({ error: "not found" }, 404);
   },
 
-  // The per-minute tick lands with the monitoring engine (PR 2).
-  async scheduled(_ctl: ScheduledController, _env: Env, _ctx: ExecutionContext): Promise<void> {},
+  // Uses the minute the cron was scheduled for, so a duplicate delivery of
+  // the same tick sees the same `now`.
+  async scheduled(ctl: ScheduledController, env: Env, _ctx: ExecutionContext): Promise<void> {
+    const report = await tick(env, ctl.scheduledTime);
+    if (report.errors.length > 0) console.error("tick finished with errors", report.errors);
+  },
 } satisfies ExportedHandler<Env>;

@@ -8,7 +8,7 @@ describe("worker routes", () => {
   it("GET /health returns 200 with status ok", async () => {
     const res = await exports.default.fetch("https://pulse.test/health");
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "ok" });
+    expect(await res.json()).toEqual({ status: "ok", lastTick: null });
   });
 
   it("unknown path returns 404", async () => {
