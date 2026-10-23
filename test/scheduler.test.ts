@@ -31,7 +31,7 @@ describe("tick", () => {
   });
 
   it("a failing GitHub refresh does not stop alerts from flushing", async () => {
-    const failing = vi.fn(async () => {
+    const failing = vi.fn(async (): Promise<number> => {
       throw new Error("GitHub 502");
     });
     await env.DB.prepare("INSERT INTO alerts (subject, kind, at, message) VALUES ('target:x', 'down', ?1, 'x down')").bind(OPEN).run();
@@ -44,7 +44,7 @@ describe("tick", () => {
   });
 
   it("refreshes GitHub every 15 minutes, not every tick", async () => {
-    const refresh = vi.fn(async () => {});
+    const refresh = vi.fn(async () => 0);
     for (const m of [0, 1, 14, 15]) await tick(env, OPEN + m * MIN, refresh);
     expect(refresh).toHaveBeenCalledTimes(2);
   });

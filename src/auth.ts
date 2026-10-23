@@ -1,3 +1,4 @@
+import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 import { INGEST_KEYS } from "./config";
 import type { Env } from "./env";
 
@@ -25,4 +26,48 @@ export async function appForKey(req: Request, env: Env): Promise<string | null> 
     if (crypto.subtle.timingSafeEqual(supplied, await sha256(expected))) found = app;
   }
   return found;
+}
+
+/** Accepts "team.cloudflareaccess.com" or "https://team.cloudflareaccess.com/". */
+export function accessHost(domain: string): string {
+  return domain.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+}
+
+// One key set per team domain. jose caches the fetched keys and refetches
+// when Cloudflare rotates them.
+const remoteKeys = new Map<string, JWTVerifyGetKey>();
+
+function keysFor(host: string): JWTVerifyGetKey {
+  let keys = remoteKeys.get(host);
+  if (!keys) {
+    keys = createRemoteJWKSet(new URL(`https://${host}/cdn-cgi/access/certs`));
+    remoteKeys.set(host, keys);
+  }
+  return keys;
+}
+
+/**
+ * The signed-in owner, or null. Cloudflare Access puts a signed JWT in
+ * Cf-Access-Jwt-Assertion on every request it lets through. Checking it here
+ * means the Worker stays private even if the Access policy is misconfigured
+ * or someone reaches the Worker without going through Access.
+ */
+export async function verifyAccess(req: Request, env: Env, keys?: JWTVerifyGetKey): Promise<{ email: string } | null> {
+  const { ACCESS_TEAM_DOMAIN, ACCESS_AUD, OWNER_EMAIL } = env;
+  if (!ACCESS_TEAM_DOMAIN || !ACCESS_AUD || !OWNER_EMAIL) return null;
+  const token = req.headers.get("cf-access-jwt-assertion");
+  if (!token) return null;
+
+  const host = accessHost(ACCESS_TEAM_DOMAIN);
+  try {
+    const { payload } = await jwtVerify(token, keys ?? keysFor(host), {
+      issuer: `https://${host}`,
+      audience: ACCESS_AUD,
+      algorithms: ["RS256"],
+    });
+    const email = typeof payload.email === "string" ? payload.email : "";
+    return email.toLowerCase() === OWNER_EMAIL.toLowerCase() ? { email } : null;
+  } catch {
+    return null;
+  }
 }

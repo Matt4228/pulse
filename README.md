@@ -31,7 +31,8 @@ UptimeRobot --(every 5 min)--> /health       +-----------------------------+
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `GET /health` | none | Liveness for the external monitor |
+| `GET /` | Cloudflare Access, owner only | The dashboard. Returns 503 if Access isn't configured, 403 for anyone else |
+| `GET /health` | none | 200 while the per-minute scheduler is running, 503 if it has stopped |
 | `POST /ingest/heartbeat` | per-app bearer key | `{ "job": "maa-poll", "status": "ok" }` |
 | `POST /ingest/metric` | per-app bearer key | `{ "metrics": [{ "name": "source.quote", "value": 12 }] }` |
 

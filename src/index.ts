@@ -1,3 +1,4 @@
+import { handleDashboard } from "./dashboard";
 import type { Env } from "./env";
 import { handleIngest } from "./ingest";
 import { healthStatus, tick } from "./scheduler";
@@ -13,6 +14,10 @@ export default {
     if (pathname === "/health") {
       const { healthy, lastTick } = await healthStatus(env, Date.now());
       return json({ status: healthy ? "ok" : "stale", lastTick }, healthy ? 200 : 503);
+    }
+
+    if (pathname === "/" && req.method === "GET") {
+      return handleDashboard(req, env, Date.now());
     }
 
     if (pathname.startsWith("/ingest/")) {
