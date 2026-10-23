@@ -11,7 +11,7 @@
       "binding": "DB",
       "database_name": "pulse",
       // Replaced with the real id from `npx wrangler d1 create pulse` at deploy time.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "3f2b4768-095d-4bff-b5e6-2efaf07734fc",
       "migrations_dir": "migrations"
     }
   ]
