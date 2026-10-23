@@ -17,6 +17,11 @@ export class UsageMeter {
     }
   }
 
+  /** Rows counted since the last flush. */
+  get totals(): { read: number; written: number } {
+    return { read: this.read, written: this.written };
+  }
+
   async flush(env: Env, now: number): Promise<void> {
     if (this.read === 0 && this.written === 0) return;
     await env.DB.prepare(
