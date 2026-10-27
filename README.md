@@ -2,6 +2,8 @@
 
 Pulse is a small monitoring service for my side projects. It runs as a single Cloudflare Worker with a D1 (SQLite) database, on the free plan, and answers one question at a glance: **is everything working?**
 
+![Pulse dashboard: uptime, response times and latest deploy for each project, recent alerts and free-plan usage](docs/dashboard.png)
+
 ## What it watches
 
 | Project | Check |
